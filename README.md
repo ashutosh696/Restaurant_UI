@@ -120,6 +120,8 @@ Pages:
 - Customer ordering: `http://localhost:5173/customer`
 - Admin panel: `http://localhost:5173/admin`
 
+Vercel serves React as a single-page app. The frontend includes `restaurant-ui/vercel.json` so direct visits to `/customer` or `/admin` fall back to `index.html`.
+
 ## API
 
 - `GET /api/menu`
