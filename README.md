@@ -79,6 +79,20 @@ MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster.example.mongodb.net/restaurant?r
 
 Put that value in `restaurant-service\.env`.
 
+For Render + MongoDB Atlas:
+
+1. In Atlas, open **Network Access**.
+2. Add an access-list entry for Render outbound traffic. For quick testing, use `0.0.0.0/0`, then tighten it later if your Render plan gives stable outbound IPs.
+3. In Atlas, open **Database Access** and confirm the database user exists and has read/write access.
+4. In Render, set `MONGODB_URI` without quotes. If the password contains special characters like `@`, `#`, `%`, `/`, `:`, or `?`, URL-encode the password.
+5. Use an Atlas SRV URI similar to:
+
+```properties
+MONGODB_URI=mongodb+srv://USER:URL_ENCODED_PASSWORD@cluster.example.mongodb.net/restaurant?retryWrites=true&w=majority&tls=true
+```
+
+The backend will fail during startup if Atlas blocks Render or if the URI credentials are malformed. A common symptom is `MongoTimeoutException` with `SSLException: Received fatal alert: internal_error`.
+
 ## Login
 
 The backend creates one admin user on startup if it does not already exist:
@@ -89,6 +103,7 @@ ADMIN_PASSWORD=admin12345
 ```
 
 Change these in `restaurant-service\.env` before first startup for a real deployment.
+The React admin login form does not prefill these credentials.
 
 Normal users can browse and place orders without logging in. Admin users must log in to see the admin panel.
 

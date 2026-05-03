@@ -84,8 +84,8 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [editingItem, setEditingItem] = useState(emptyMenuItem());
   const [auth, setAuth] = useState(() => readStoredAuth());
-  const [loginEmail, setLoginEmail] = useState('admin@restaurant.local');
-  const [loginPassword, setLoginPassword] = useState('admin12345');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -362,18 +362,18 @@ function App() {
 function LoginView({ email, password, loading, setEmail, setPassword, login }) {
   return (
     <section className="login-layout">
-      <form className="panel login-panel" onSubmit={login}>
+      <form className="panel login-panel" onSubmit={login} autoComplete="off">
         <div className="section-heading">
           <h2>Admin login</h2>
           <LogIn size={20} />
         </div>
         <label>
           Email
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required />
         </label>
         <label>
           Password
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
         </label>
         <button className="primary" disabled={loading}>
           <LogIn size={18} /> Sign in
