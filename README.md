@@ -97,6 +97,11 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+Pages:
+
+- Customer ordering: `http://localhost:5173/customer`
+- Admin panel: `http://localhost:5173/admin`
+
 ## API
 
 - `GET /api/menu`

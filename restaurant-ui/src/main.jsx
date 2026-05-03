@@ -74,7 +74,7 @@ function currency(value) {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState('customer');
+  const [page, setPage] = useState(() => pageFromPath(window.location.pathname));
   const [menu, setMenu] = useState([]);
   const [orders, setOrders] = useState([]);
   const [cart, setCart] = useState([]);
@@ -95,19 +95,31 @@ function App() {
   );
   const trackedOrder = orders.find((order) => order.id === selectedOrderId);
   const isAdmin = auth?.role === 'ADMIN';
+  const isAdminPage = page === 'admin';
 
   useEffect(() => {
     refreshAll();
-  }, [auth?.token]);
+  }, [auth?.token, page]);
+
+  useEffect(() => {
+    function handlePopState() {
+      setPage(pageFromPath(window.location.pathname));
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   async function refreshAll() {
     setLoading(true);
     setError('');
     try {
-      const menuItems = await request(isAdmin ? '/menu' : '/menu/available', { token: auth?.token });
+      const menuItems = await request(isAdminPage && isAdmin ? '/menu' : '/menu/available', { token: auth?.token });
       setMenu(menuItems);
-      if (isAdmin) {
+      if (isAdminPage && isAdmin) {
         setOrders(await request('/orders', { token: auth.token }));
+      } else if (!isAdminPage) {
+        setOrders(readCustomerOrders());
       }
     } catch (err) {
       setMenu((current) => (current.length ? current : FALLBACK_MENU));
@@ -155,6 +167,7 @@ function App() {
         }),
       });
       setOrders((current) => [order, ...current]);
+      saveCustomerOrder(order);
       setSelectedOrderId(order.id);
       setCart([]);
       setCustomerName('');
@@ -235,7 +248,7 @@ function App() {
       }
       setAuth(session);
       localStorage.setItem('restaurantAuth', JSON.stringify(session));
-      setActiveView('admin');
+      navigateTo('/admin');
       setNotice(`Signed in as ${session.email}.`);
     } catch (err) {
       setError(err.message);
@@ -247,9 +260,14 @@ function App() {
   function logout() {
     localStorage.removeItem('restaurantAuth');
     setAuth(null);
-    setActiveView('customer');
+    navigateTo('/customer');
     setOrders([]);
     setNotice('Signed out.');
+  }
+
+  function navigateTo(path) {
+    window.history.pushState({}, '', path);
+    setPage(pageFromPath(path));
   }
 
   return (
@@ -262,22 +280,18 @@ function App() {
             <p>Menu, cart, orders, and kitchen flow</p>
           </div>
         </div>
-        <nav className="view-switch" aria-label="Application view">
-          <button className={activeView === 'customer' ? 'active' : ''} onClick={() => setActiveView('customer')}>
+        <nav className="view-switch" aria-label="Application pages">
+          <button className={page === 'customer' ? 'active' : ''} onClick={() => navigateTo('/customer')}>
             <ShoppingCart size={18} /> Customer
           </button>
-          {isAdmin ? (
-            <>
-              <button className={activeView === 'admin' ? 'active' : ''} onClick={() => setActiveView('admin')}>
-                <LayoutDashboard size={18} /> Admin
-              </button>
-              <button onClick={logout}>
-                <LogOut size={18} /> Logout
-              </button>
-            </>
-          ) : (
-            <button className={activeView === 'login' ? 'active' : ''} onClick={() => setActiveView('login')}>
-              <LogIn size={18} /> Admin login
+          {page === 'admin' && (
+            <button className="active" onClick={() => navigateTo('/admin')}>
+              <LayoutDashboard size={18} /> Admin
+            </button>
+          )}
+          {isAdmin && (
+            <button onClick={logout}>
+              <LogOut size={18} /> Logout
             </button>
           )}
           <button className="icon-button" onClick={refreshAll} aria-label="Refresh data" title="Refresh data">
@@ -292,7 +306,7 @@ function App() {
         </section>
       )}
 
-      {activeView === 'customer' ? (
+      {page === 'customer' ? (
         <CustomerView
           menu={menu}
           cart={cart}
@@ -310,7 +324,7 @@ function App() {
           changeQuantity={changeQuantity}
           placeOrder={placeOrder}
         />
-      ) : activeView === 'login' || !isAdmin ? (
+      ) : !isAdmin ? (
         <LoginView
           email={loginEmail}
           password={loginPassword}
@@ -572,6 +586,10 @@ function emptyMenuItem() {
   return { name: '', description: '', category: '', price: 0, available: true };
 }
 
+function pageFromPath(pathname) {
+  return pathname.toLowerCase().startsWith('/admin') ? 'admin' : 'customer';
+}
+
 function readStoredAuth() {
   try {
     const stored = localStorage.getItem('restaurantAuth');
@@ -579,6 +597,20 @@ function readStoredAuth() {
   } catch {
     return null;
   }
+}
+
+function readCustomerOrders() {
+  try {
+    const stored = localStorage.getItem('customerOrders');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomerOrder(order) {
+  const current = readCustomerOrders();
+  localStorage.setItem('customerOrders', JSON.stringify([order, ...current].slice(0, 10)));
 }
 
 createRoot(document.getElementById('root')).render(<App />);
