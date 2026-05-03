@@ -1,15 +1,9 @@
-FROM eclipse-temurin:17-jdk
+FROM maven:3.9.6-eclipse-temurin-17
 
 WORKDIR /app
 
-# Copy everything
 COPY . .
 
-# Give permission to mvnw
-RUN chmod +x mvnw
+RUN mvn clean package -DskipTests
 
-# Build project
-RUN ./mvnw clean package -DskipTests
-
-# Run jar
 CMD ["java", "-jar", "target/*.jar"]
