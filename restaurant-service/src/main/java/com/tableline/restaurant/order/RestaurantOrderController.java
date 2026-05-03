@@ -34,6 +34,13 @@ public class RestaurantOrderController {
     return orders.findAllByOrderByCreatedAtDesc();
   }
 
+  @GetMapping("/{id}")
+  RestaurantOrder getOrder(@PathVariable String id) {
+    return orders
+        .findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+  }
+
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   RestaurantOrder createOrder(@Valid @RequestBody CreateOrderRequest request) {

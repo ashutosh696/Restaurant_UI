@@ -114,15 +114,21 @@ function App() {
     setLoading(true);
     setError('');
     try {
+      if (isAdminPage) {
+        setOrders([]);
+      }
       const menuItems = await request(isAdminPage && isAdmin ? '/menu' : '/menu/available', { token: auth?.token });
       setMenu(menuItems);
       if (isAdminPage && isAdmin) {
         setOrders(await request('/orders', { token: auth.token }));
       } else if (!isAdminPage) {
-        setOrders(readCustomerOrders());
+        setOrders(await loadCustomerOrders());
       }
     } catch (err) {
       setMenu((current) => (current.length ? current : FALLBACK_MENU));
+      if (isAdminPage) {
+        setOrders([]);
+      }
       setError(`${err.message} Showing sample menu until the API is reachable.`);
     } finally {
       setLoading(false);
@@ -267,6 +273,9 @@ function App() {
 
   function navigateTo(path) {
     window.history.pushState({}, '', path);
+    if (pageFromPath(path) === 'admin') {
+      setOrders([]);
+    }
     setPage(pageFromPath(path));
   }
 
@@ -542,6 +551,7 @@ function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMen
           <h2>Incoming orders</h2>
           <span>{orders.length}</span>
         </div>
+        {orders.length === 0 && <p className="muted">No orders found in the database.</p>}
         {orders.map((order) => (
           <article className="order-card" key={order.id}>
             <div className="order-topline">
@@ -611,6 +621,21 @@ function readCustomerOrders() {
 function saveCustomerOrder(order) {
   const current = readCustomerOrders();
   localStorage.setItem('customerOrders', JSON.stringify([order, ...current].slice(0, 10)));
+}
+
+async function loadCustomerOrders() {
+  const storedOrders = readCustomerOrders();
+  const refreshedOrders = await Promise.all(
+    storedOrders.map(async (order) => {
+      try {
+        return await request(`/orders/${order.id}`);
+      } catch {
+        return order;
+      }
+    }),
+  );
+  localStorage.setItem('customerOrders', JSON.stringify(refreshedOrders));
+  return refreshedOrders;
 }
 
 createRoot(document.getElementById('root')).render(<App />);

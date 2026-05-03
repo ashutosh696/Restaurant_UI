@@ -76,6 +76,8 @@ Change these in `restaurant-service\.env` before first startup for a real deploy
 
 Normal users can browse and place orders without logging in. Admin users must log in to see the admin panel.
 
+The backend also seeds three starter menu items when the `menu_items` collection is empty. Orders are stored in MongoDB in the `orders` collection after a customer places an order.
+
 ## Run
 
 Start MongoDB locally or point `MONGODB_URI` to a hosted MongoDB database.
@@ -110,6 +112,7 @@ Pages:
 - `PUT /api/menu/{id}`
 - `DELETE /api/menu/{id}`
 - `GET /api/orders`
+- `GET /api/orders/{id}`
 - `POST /api/orders`
 - `PATCH /api/orders/{id}/status`
 
@@ -117,6 +120,7 @@ Public endpoints:
 
 - `GET /api/menu/available`
 - `POST /api/orders`
+- `GET /api/orders/{id}`
 - `POST /api/auth/login`
 - `POST /api/auth/register`
 
