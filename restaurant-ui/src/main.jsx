@@ -5,6 +5,8 @@ import {
   CookingPot,
   CreditCard,
   LayoutDashboard,
+  LogIn,
+  LogOut,
   Plus,
   RefreshCw,
   Save,
@@ -50,7 +52,11 @@ function normalizeApiUrl(url) {
 async function request(path, options = {}) {
   const endpoint = `${normalizeApiUrl(API_URL)}${path}`;
   const response = await fetch(endpoint, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+      ...(options.headers || {}),
+    },
     ...options,
   });
 
@@ -76,6 +82,9 @@ function App() {
   const [phone, setPhone] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [editingItem, setEditingItem] = useState(emptyMenuItem());
+  const [auth, setAuth] = useState(() => readStoredAuth());
+  const [loginEmail, setLoginEmail] = useState('admin@restaurant.local');
+  const [loginPassword, setLoginPassword] = useState('admin12345');
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -85,21 +94,21 @@ function App() {
     [cart],
   );
   const trackedOrder = orders.find((order) => order.id === selectedOrderId);
+  const isAdmin = auth?.role === 'ADMIN';
 
   useEffect(() => {
     refreshAll();
-  }, []);
+  }, [auth?.token]);
 
   async function refreshAll() {
     setLoading(true);
     setError('');
     try {
-      const [menuItems, orderItems] = await Promise.all([
-        request('/menu'),
-        request('/orders'),
-      ]);
+      const menuItems = await request(isAdmin ? '/menu' : '/menu/available', { token: auth?.token });
       setMenu(menuItems);
-      setOrders(orderItems);
+      if (isAdmin) {
+        setOrders(await request('/orders', { token: auth.token }));
+      }
     } catch (err) {
       setMenu((current) => (current.length ? current : FALLBACK_MENU));
       setError(`${err.message} Showing sample menu until the API is reachable.`);
@@ -166,7 +175,7 @@ function App() {
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
       const path = editingItem.id ? `/menu/${editingItem.id}` : '/menu';
-      const saved = await request(path, { method, body: JSON.stringify(editingItem) });
+      const saved = await request(path, { method, token: auth?.token, body: JSON.stringify(editingItem) });
       setMenu((current) => {
         const exists = current.some((item) => item.id === saved.id);
         return exists ? current.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...current];
@@ -184,7 +193,7 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      await request(`/menu/${itemId}`, { method: 'DELETE' });
+      await request(`/menu/${itemId}`, { method: 'DELETE', token: auth?.token });
       setMenu((current) => current.filter((item) => item.id !== itemId));
     } catch (err) {
       setError(err.message);
@@ -199,6 +208,7 @@ function App() {
     try {
       const updated = await request(`/orders/${orderId}/status`, {
         method: 'PATCH',
+        token: auth?.token,
         body: JSON.stringify({ status }),
       });
       setOrders((current) => current.map((order) => (order.id === orderId ? updated : order)));
@@ -208,6 +218,38 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function login(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    setNotice('');
+    try {
+      const session = await request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+      if (session.role !== 'ADMIN') {
+        throw new Error('Only ADMIN users can access the restaurant panel.');
+      }
+      setAuth(session);
+      localStorage.setItem('restaurantAuth', JSON.stringify(session));
+      setActiveView('admin');
+      setNotice(`Signed in as ${session.email}.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('restaurantAuth');
+    setAuth(null);
+    setActiveView('customer');
+    setOrders([]);
+    setNotice('Signed out.');
   }
 
   return (
@@ -224,9 +266,20 @@ function App() {
           <button className={activeView === 'customer' ? 'active' : ''} onClick={() => setActiveView('customer')}>
             <ShoppingCart size={18} /> Customer
           </button>
-          <button className={activeView === 'admin' ? 'active' : ''} onClick={() => setActiveView('admin')}>
-            <LayoutDashboard size={18} /> Admin
-          </button>
+          {isAdmin ? (
+            <>
+              <button className={activeView === 'admin' ? 'active' : ''} onClick={() => setActiveView('admin')}>
+                <LayoutDashboard size={18} /> Admin
+              </button>
+              <button onClick={logout}>
+                <LogOut size={18} /> Logout
+              </button>
+            </>
+          ) : (
+            <button className={activeView === 'login' ? 'active' : ''} onClick={() => setActiveView('login')}>
+              <LogIn size={18} /> Admin login
+            </button>
+          )}
           <button className="icon-button" onClick={refreshAll} aria-label="Refresh data" title="Refresh data">
             <RefreshCw size={18} />
           </button>
@@ -257,6 +310,15 @@ function App() {
           changeQuantity={changeQuantity}
           placeOrder={placeOrder}
         />
+      ) : activeView === 'login' || !isAdmin ? (
+        <LoginView
+          email={loginEmail}
+          password={loginPassword}
+          loading={loading}
+          setEmail={setLoginEmail}
+          setPassword={setLoginPassword}
+          login={login}
+        />
       ) : (
         <AdminView
           menu={menu}
@@ -270,6 +332,30 @@ function App() {
         />
       )}
     </main>
+  );
+}
+
+function LoginView({ email, password, loading, setEmail, setPassword, login }) {
+  return (
+    <section className="login-layout">
+      <form className="panel login-panel" onSubmit={login}>
+        <div className="section-heading">
+          <h2>Admin login</h2>
+          <LogIn size={20} />
+        </div>
+        <label>
+          Email
+          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+        </label>
+        <label>
+          Password
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+        </label>
+        <button className="primary" disabled={loading}>
+          <LogIn size={18} /> Sign in
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -425,7 +511,7 @@ function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMen
           <div className="admin-row" key={item.id}>
             <div>
               <strong>{item.name}</strong>
-              <span>{currency(item.price)} · {item.available ? 'Available' : 'Hidden'}</span>
+              <span>{currency(item.price)} - {item.available ? 'Available' : 'Hidden'}</span>
             </div>
             <div className="row-actions">
               <button onClick={() => setEditingItem(item)}>Edit</button>
@@ -484,6 +570,15 @@ function statusStepClass(currentStatus, step) {
 
 function emptyMenuItem() {
   return { name: '', description: '', category: '', price: 0, available: true };
+}
+
+function readStoredAuth() {
+  try {
+    const stored = localStorage.getItem('restaurantAuth');
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
 }
 
 createRoot(document.getElementById('root')).render(<App />);

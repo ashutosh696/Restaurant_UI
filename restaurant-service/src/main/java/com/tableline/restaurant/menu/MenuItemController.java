@@ -2,6 +2,7 @@ package com.tableline.restaurant.menu;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ public class MenuItemController {
   }
 
   @GetMapping
+  @PreAuthorize("hasRole('ADMIN')")
   List<MenuItem> listMenuItems() {
     return menuItems.findAll();
   }
@@ -35,12 +37,14 @@ public class MenuItemController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("hasRole('ADMIN')")
   MenuItem createMenuItem(@Valid @RequestBody MenuItem menuItem) {
     menuItem.setId(null);
     return menuItems.save(menuItem);
   }
 
   @PutMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   MenuItem updateMenuItem(@PathVariable String id, @Valid @RequestBody MenuItem menuItem) {
     if (!menuItems.existsById(id)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Menu item not found");
@@ -51,6 +55,7 @@ public class MenuItemController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("hasRole('ADMIN')")
   void deleteMenuItem(@PathVariable String id) {
     menuItems.deleteById(id);
   }

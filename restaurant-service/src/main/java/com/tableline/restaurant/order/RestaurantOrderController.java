@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ public class RestaurantOrderController {
   }
 
   @GetMapping
+  @PreAuthorize("hasRole('ADMIN')")
   List<RestaurantOrder> listOrders() {
     return orders.findAllByOrderByCreatedAtDesc();
   }
@@ -44,6 +46,7 @@ public class RestaurantOrderController {
   }
 
   @PatchMapping("/{id}/status")
+  @PreAuthorize("hasRole('ADMIN')")
   RestaurantOrder updateStatus(@PathVariable String id, @Valid @RequestBody UpdateStatusRequest request) {
     RestaurantOrder order = orders
         .findById(id)

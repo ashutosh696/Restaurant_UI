@@ -177,7 +177,8 @@ h3 {
 }
 
 .customer-grid,
-.admin-grid {
+.admin-grid,
+.login-layout {
   align-items: start;
   display: grid;
   gap: 18px;
@@ -189,6 +190,15 @@ h3 {
 
 .admin-grid {
   grid-template-columns: minmax(280px, 340px) minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+}
+
+.login-layout {
+  justify-content: center;
+  padding-top: 28px;
+}
+
+.login-panel {
+  width: min(100%, 390px);
 }
 
 .menu-panel,
