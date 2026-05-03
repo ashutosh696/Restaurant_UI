@@ -1,0 +1,396 @@
+:root {
+  color: #17201d;
+  background: #f7f4ef;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d6d2ca;
+  border-radius: 8px;
+  color: #17201d;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 700;
+  gap: 0.45rem;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.55rem 0.85rem;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #d6d2ca;
+  border-radius: 8px;
+  min-height: 42px;
+  padding: 0.65rem 0.75rem;
+  width: 100%;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+label {
+  color: #536058;
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 800;
+  gap: 0.35rem;
+}
+
+.app-shell {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 24px;
+}
+
+.topbar,
+.section-heading,
+.card-actions,
+.total-row,
+.order-topline,
+.row-actions,
+.status-actions,
+.view-switch,
+.quantity {
+  align-items: center;
+  display: flex;
+}
+
+.topbar {
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.brand {
+  align-items: center;
+  display: flex;
+  gap: 0.8rem;
+}
+
+.brand-mark {
+  align-items: center;
+  background: #1f7a5c;
+  border-radius: 8px;
+  color: white;
+  display: inline-flex;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.65rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+}
+
+h3 {
+  font-size: 1rem;
+  line-height: 1.28;
+}
+
+.brand p,
+.muted,
+.menu-card p,
+.admin-row span,
+.order-topline span,
+.cart-line span {
+  color: #66736a;
+}
+
+.view-switch {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.view-switch .active,
+.primary,
+.active-status {
+  background: #1f7a5c;
+  border-color: #1f7a5c;
+  color: white;
+}
+
+.icon-button {
+  aspect-ratio: 1;
+  padding: 0;
+  width: 40px;
+}
+
+.danger {
+  color: #9f2c2c;
+}
+
+.message {
+  border-radius: 8px;
+  font-weight: 750;
+  margin-bottom: 18px;
+  padding: 0.85rem 1rem;
+}
+
+.message.error {
+  background: #ffe6df;
+  color: #842711;
+}
+
+.message.success {
+  background: #dcf3e9;
+  color: #0f5137;
+}
+
+.customer-grid,
+.admin-grid {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+}
+
+.customer-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+}
+
+.admin-grid {
+  grid-template-columns: minmax(280px, 340px) minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+}
+
+.menu-panel,
+.panel {
+  background: #fffdfa;
+  border: 1px solid #ded8ce;
+  border-radius: 8px;
+}
+
+.menu-panel,
+.panel {
+  padding: 18px;
+}
+
+.section-heading {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-heading span {
+  color: #536058;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.menu-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+
+.menu-card {
+  border: 1px solid #e3ded5;
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  min-height: 190px;
+  padding: 16px;
+}
+
+.category {
+  color: #bc4d2f;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 900;
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+}
+
+.menu-card p {
+  line-height: 1.45;
+  margin-top: 0.45rem;
+}
+
+.card-actions,
+.total-row,
+.order-topline {
+  justify-content: space-between;
+}
+
+.side-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.panel {
+  display: grid;
+  gap: 12px;
+}
+
+.cart-lines,
+.list-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-line,
+.admin-row {
+  align-items: center;
+  border-bottom: 1px solid #ece6dc;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding-bottom: 10px;
+}
+
+.cart-line > div:first-child,
+.admin-row > div:first-child {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.quantity {
+  gap: 0.4rem;
+}
+
+.quantity button {
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  width: 32px;
+}
+
+.quantity span {
+  color: #17201d;
+  font-weight: 850;
+  min-width: 22px;
+  text-align: center;
+}
+
+.total-row {
+  border-top: 1px solid #e3ded5;
+  font-size: 1.08rem;
+  padding-top: 12px;
+}
+
+.tracker {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.tracker span {
+  background: #eee8df;
+  border-radius: 8px;
+  color: #687269;
+  font-size: 0.82rem;
+  font-weight: 850;
+  padding: 0.65rem 0.4rem;
+  text-align: center;
+}
+
+.tracker .done {
+  background: #1f7a5c;
+  color: white;
+}
+
+.checkbox-row {
+  align-items: center;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.checkbox-row input {
+  min-height: auto;
+  width: auto;
+}
+
+.orders-panel {
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+}
+
+.order-card {
+  border: 1px solid #e3ded5;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.order-card ul {
+  color: #536058;
+  line-height: 1.5;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.status-actions,
+.row-actions {
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+@media (max-width: 1100px) {
+  .customer-grid,
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orders-panel {
+    max-height: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .view-switch,
+  .view-switch button:not(.icon-button) {
+    width: 100%;
+  }
+
+  .tracker {
+    grid-template-columns: 1fr;
+  }
+}
