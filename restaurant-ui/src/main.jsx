@@ -46,7 +46,8 @@ const FALLBACK_MENU = [
 ];
 
 function normalizeApiUrl(url) {
-  return url.replace(/\/$/, '');
+  const withoutTrailingSlash = url.replace(/\/$/, '');
+  return withoutTrailingSlash.endsWith('/api') ? withoutTrailingSlash : `${withoutTrailingSlash}/api`;
 }
 
 async function request(path, options = {}) {

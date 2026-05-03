@@ -33,6 +33,22 @@ Default local endpoints use HTTP:
 
 The backend allows both `http://localhost:5173` and `http://127.0.0.1:5173` for local React development.
 
+## Deployment Environment
+
+For Vercel, set the frontend environment variable:
+
+```properties
+VITE_API_URL=https://restaurant-ui-ti7i.onrender.com/api
+```
+
+For Render, set the backend environment variable:
+
+```properties
+CORS_ALLOWED_ORIGINS=https://restaurant-ui-zeta.vercel.app
+```
+
+The React app also normalizes `VITE_API_URL`, so if the value is accidentally set to `https://restaurant-ui-ti7i.onrender.com`, it will call `https://restaurant-ui-ti7i.onrender.com/api/...`.
+
 ## MongoDB
 
 Use either local MongoDB or a hosted MongoDB connection string.
