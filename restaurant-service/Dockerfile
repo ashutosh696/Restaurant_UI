@@ -12,4 +12,4 @@ WORKDIR /app/restaurant-service
 RUN mvn clean package -DskipTests
 
 # Run jar
-CMD ["java", "-jar", "target/*.jar"]
+CMD ["java", "-jar", "target/restaurant-service-0.0.1-SNAPSHOT.jar"]
