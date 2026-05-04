@@ -358,8 +358,8 @@ function App() {
               </button>
             </>
           )}
-          {page === 'admin' && (
-            <button className="active" onClick={() => navigateTo('/admin')}>
+          {isAdmin && (
+            <button className={page === 'admin' ? 'active' : ''} onClick={() => navigateTo('/admin')}>
               <LayoutDashboard size={18} /> Admin
             </button>
           )}
