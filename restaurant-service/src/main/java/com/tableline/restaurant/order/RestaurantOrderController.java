@@ -36,10 +36,16 @@ public class RestaurantOrderController {
   }
 
   @GetMapping("/{id}")
-  RestaurantOrder getOrder(@PathVariable String id) {
-    return orders
+  RestaurantOrder getOrder(@PathVariable String id, Authentication authentication) {
+    RestaurantOrder order = orders
         .findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+    boolean admin = authentication.getAuthorities().stream()
+        .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+    if (!admin && !authentication.getName().equalsIgnoreCase(order.getCustomerEmail())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order belongs to another customer");
+    }
+    return order;
   }
 
   @PostMapping

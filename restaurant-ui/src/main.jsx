@@ -127,7 +127,7 @@ function App() {
       if (isAdminPage && isAdmin) {
         setOrders(await request('/orders', { token: auth.token }));
       } else if (!isAdminPage) {
-        setOrders(await loadCustomerOrders());
+        setOrders(auth ? await loadCustomerOrders(auth) : []);
       }
     } catch (err) {
       setMenu((current) => (current.length ? current : FALLBACK_MENU));
@@ -184,7 +184,7 @@ function App() {
         }),
       });
       setOrders((current) => [order, ...current]);
-      saveCustomerOrder(order);
+      saveCustomerOrder(order, auth);
       setSelectedOrderId(order.id);
       setCart([]);
       setCustomerName('');
@@ -694,33 +694,38 @@ function readStoredSession() {
   }
 }
 
-function readCustomerOrders() {
+function customerOrdersKey(auth) {
+  return auth?.email ? `customerOrders:${auth.email.toLowerCase()}` : 'customerOrders:anonymous';
+}
+
+function readCustomerOrders(auth) {
   try {
-    const stored = localStorage.getItem('customerOrders');
+    const stored = localStorage.getItem(customerOrdersKey(auth));
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 }
 
-function saveCustomerOrder(order) {
-  const current = readCustomerOrders();
-  localStorage.setItem('customerOrders', JSON.stringify([order, ...current].slice(0, 10)));
+function saveCustomerOrder(order, auth) {
+  const current = readCustomerOrders(auth);
+  localStorage.setItem(customerOrdersKey(auth), JSON.stringify([order, ...current].slice(0, 10)));
 }
 
-async function loadCustomerOrders() {
-  const storedOrders = readCustomerOrders();
+async function loadCustomerOrders(auth) {
+  const storedOrders = readCustomerOrders(auth);
   const refreshedOrders = await Promise.all(
     storedOrders.map(async (order) => {
       try {
-        return await request(`/orders/${order.id}`);
+        return await request(`/orders/${order.id}`, { token: auth.token });
       } catch {
-        return order;
+        return null;
       }
     }),
   );
-  localStorage.setItem('customerOrders', JSON.stringify(refreshedOrders));
-  return refreshedOrders;
+  const visibleOrders = refreshedOrders.filter(Boolean);
+  localStorage.setItem(customerOrdersKey(auth), JSON.stringify(visibleOrders));
+  return visibleOrders;
 }
 
 createRoot(document.getElementById('root')).render(<App />);

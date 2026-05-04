@@ -107,6 +107,7 @@ Change these in `restaurant-service\.env` before first startup for a real deploy
 The React admin login form does not prefill these credentials.
 
 Normal users can browse the menu without logging in, but must sign in before placing an order. Admin users must log in to see the admin panel.
+Customers can track only their own orders. Admin users can view all incoming orders.
 
 The backend also seeds three starter menu items when the `menu_items` collection is empty. Orders are stored in MongoDB in the `orders` collection after a customer places an order.
 
@@ -155,13 +156,13 @@ Vercel serves React as a single-page app. The frontend includes `restaurant-ui/v
 Public endpoints:
 
 - `GET /api/menu/available`
-- `GET /api/orders/{id}`
 - `POST /api/auth/login`
 - `POST /api/auth/register`
 
 Authenticated customer endpoints:
 
 - `POST /api/orders`
+- `GET /api/orders/{id}` for the logged-in customer's own order
 
 Admin-only endpoints:
 
