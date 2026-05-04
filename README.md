@@ -11,6 +11,8 @@ Two-app restaurant ordering system:
 - Customer browsing is public
 - Customer signup/sign-in is required before placing an order
 - Print bill from customer tracking or admin orders using the browser print dialog
+- Prices display in Indian Rupees and order timestamps display in IST
+- Admin can generate today's total sales count and amount from loaded orders
 - Admin panel requires login
 - JWT authentication with `ADMIN` and `USER` roles
 - Admin menu item create/update/delete

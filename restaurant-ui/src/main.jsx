@@ -24,7 +24,7 @@ const FALLBACK_MENU = [
     id: 'sample-1',
     name: 'Paneer Tikka Bowl',
     description: 'Charred paneer, saffron rice, mint chutney, crisp salad.',
-    price: 12.5,
+    price: 250,
     category: 'Bowls',
     available: true,
   },
@@ -32,7 +32,7 @@ const FALLBACK_MENU = [
     id: 'sample-2',
     name: 'Masala Dosa',
     description: 'Crisp dosa, potato masala, sambar, coconut chutney.',
-    price: 9,
+    price: 180,
     category: 'South Indian',
     available: true,
   },
@@ -40,7 +40,7 @@ const FALLBACK_MENU = [
     id: 'sample-3',
     name: 'Mango Lassi',
     description: 'Chilled mango yogurt drink with cardamom.',
-    price: 4.5,
+    price: 90,
     category: 'Drinks',
     available: true,
   },
@@ -72,7 +72,25 @@ async function request(path, options = {}) {
 }
 
 function currency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value || 0);
+}
+
+function formatIstTimestamp(value) {
+  if (!value) return 'Not available';
+  return new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
+  }).format(new Date(value));
+}
+
+function istDateKey(value = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+  }).format(new Date(value));
 }
 
 function App() {
@@ -89,6 +107,7 @@ function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [authMode, setAuthMode] = useState(() => (pageFromPath(window.location.pathname) === 'signup' ? 'signup' : 'signin'));
   const [printOrder, setPrintOrder] = useState(null);
+  const [dailySales, setDailySales] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -305,6 +324,16 @@ function App() {
     }, 100);
   }
 
+  function generateDailySales() {
+    const todayKey = istDateKey();
+    const todayOrders = orders.filter((order) => istDateKey(order.createdAt) === todayKey);
+    setDailySales({
+      count: todayOrders.length,
+      total: todayOrders.reduce((sum, order) => sum + (order.total || 0), 0),
+      date: formatIstTimestamp(new Date()),
+    });
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -409,6 +438,8 @@ function App() {
           deleteMenuItem={deleteMenuItem}
           updateStatus={updateStatus}
           printBill={printBill}
+          dailySales={dailySales}
+          generateDailySales={generateDailySales}
         />
       )}
       {printOrder && <PrintableBill order={printOrder} />}
@@ -573,6 +604,7 @@ function CustomerView(props) {
           </select>
           {trackedOrder && (
             <>
+              <p className="muted">Placed at {formatIstTimestamp(trackedOrder.createdAt)} IST</p>
               <div className="tracker">
                 {STATUSES.map((status) => (
                   <span key={status} className={statusStepClass(trackedOrder.status, status)}>
@@ -591,7 +623,19 @@ function CustomerView(props) {
   );
 }
 
-function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMenuItem, deleteMenuItem, updateStatus, printBill }) {
+function AdminView({
+  menu,
+  orders,
+  editingItem,
+  loading,
+  setEditingItem,
+  saveMenuItem,
+  deleteMenuItem,
+  updateStatus,
+  printBill,
+  dailySales,
+  generateDailySales,
+}) {
   return (
     <section className="admin-grid">
       <form className="panel" onSubmit={saveMenuItem}>
@@ -650,6 +694,15 @@ function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMen
           <h2>Incoming orders</h2>
           <span>{orders.length}</span>
         </div>
+        <button type="button" className="primary" onClick={generateDailySales}>
+          Generate today's sales
+        </button>
+        {dailySales && (
+          <div className="sales-summary">
+            <span>Generated {dailySales.date} IST</span>
+            <strong>{dailySales.count} orders - {currency(dailySales.total)}</strong>
+          </div>
+        )}
         {orders.length === 0 && <p className="muted">No orders found in the database.</p>}
         {orders.map((order) => (
           <article className="order-card" key={order.id}>
@@ -657,6 +710,7 @@ function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMen
               <div>
                 <strong>{order.customerName}</strong>
                 <span>{order.phone}</span>
+                <span>{formatIstTimestamp(order.createdAt)} IST</span>
               </div>
               <strong>{currency(order.total)}</strong>
             </div>
@@ -702,6 +756,8 @@ function PrintableBill({ order }) {
         <strong>{order.customerName}</strong>
         <span>Phone</span>
         <strong>{order.phone}</strong>
+        <span>Placed at</span>
+        <strong>{formatIstTimestamp(order.createdAt)} IST</strong>
         <span>Status</span>
         <strong>{order.status}</strong>
       </div>

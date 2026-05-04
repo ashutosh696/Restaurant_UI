@@ -368,6 +368,21 @@ h3 {
   padding-left: 1.1rem;
 }
 
+.sales-summary {
+  background: #eef8f3;
+  border: 1px solid #b9ddcd;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.25rem;
+  padding: 12px;
+}
+
+.sales-summary span {
+  color: #536058;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
 .status-actions,
 .row-actions,
 .account-actions,

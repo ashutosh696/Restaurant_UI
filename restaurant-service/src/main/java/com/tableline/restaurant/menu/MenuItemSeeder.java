@@ -15,9 +15,9 @@ public class MenuItemSeeder {
       }
 
       menuItems.saveAll(List.of(
-          menuItem("Paneer Tikka Bowl", "Charred paneer, saffron rice, mint chutney, crisp salad.", "Bowls", 12.5),
-          menuItem("Masala Dosa", "Crisp dosa, potato masala, sambar, coconut chutney.", "South Indian", 9),
-          menuItem("Mango Lassi", "Chilled mango yogurt drink with cardamom.", "Drinks", 4.5)));
+          menuItem("Paneer Tikka Bowl", "Charred paneer, saffron rice, mint chutney, crisp salad.", "Bowls", 250),
+          menuItem("Masala Dosa", "Crisp dosa, potato masala, sambar, coconut chutney.", "South Indian", 180),
+          menuItem("Mango Lassi", "Chilled mango yogurt drink with cardamom.", "Drinks", 90)));
     };
   }
 
