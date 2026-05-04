@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Trash2,
   Utensils,
+  Printer,
 } from 'lucide-react';
 import './styles.css';
 
@@ -87,6 +88,7 @@ function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [authMode, setAuthMode] = useState(() => (pageFromPath(window.location.pathname) === 'signup' ? 'signup' : 'signin'));
+  const [printOrder, setPrintOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -296,6 +298,13 @@ function App() {
     setPage(pageFromPath(path));
   }
 
+  function printBill(order) {
+    setPrintOrder(order);
+    window.setTimeout(() => {
+      window.print();
+    }, 100);
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -371,6 +380,7 @@ function App() {
           setPhone={setPhone}
           setSelectedOrderId={setSelectedOrderId}
           navigateTo={navigateTo}
+          printBill={printBill}
           addToCart={addToCart}
           changeQuantity={changeQuantity}
           placeOrder={placeOrder}
@@ -398,8 +408,10 @@ function App() {
           saveMenuItem={saveMenuItem}
           deleteMenuItem={deleteMenuItem}
           updateStatus={updateStatus}
+          printBill={printBill}
         />
       )}
+      {printOrder && <PrintableBill order={printOrder} />}
     </main>
   );
 }
@@ -459,6 +471,7 @@ function CustomerView(props) {
     setPhone,
     setSelectedOrderId,
     navigateTo,
+    printBill,
     addToCart,
     changeQuantity,
     placeOrder,
@@ -559,13 +572,18 @@ function CustomerView(props) {
             ))}
           </select>
           {trackedOrder && (
-            <div className="tracker">
-              {STATUSES.map((status) => (
-                <span key={status} className={statusStepClass(trackedOrder.status, status)}>
-                  {status}
-                </span>
-              ))}
-            </div>
+            <>
+              <div className="tracker">
+                {STATUSES.map((status) => (
+                  <span key={status} className={statusStepClass(trackedOrder.status, status)}>
+                    {status}
+                  </span>
+                ))}
+              </div>
+              <button type="button" onClick={() => printBill(trackedOrder)}>
+                <Printer size={18} /> Print bill
+              </button>
+            </>
           )}
         </section>
       </aside>
@@ -573,7 +591,7 @@ function CustomerView(props) {
   );
 }
 
-function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMenuItem, deleteMenuItem, updateStatus }) {
+function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMenuItem, deleteMenuItem, updateStatus, printBill }) {
   return (
     <section className="admin-grid">
       <form className="panel" onSubmit={saveMenuItem}>
@@ -650,6 +668,9 @@ function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMen
               ))}
             </ul>
             <div className="status-actions">
+              <button type="button" onClick={() => printBill(order)}>
+                <Printer size={18} /> Print bill
+              </button>
               {STATUSES.map((status) => (
                 <button
                   key={status}
@@ -663,6 +684,52 @@ function AdminView({ menu, orders, editingItem, loading, setEditingItem, saveMen
           </article>
         ))}
       </section>
+    </section>
+  );
+}
+
+function PrintableBill({ order }) {
+  return (
+    <section className="print-bill" aria-hidden="true">
+      <header className="bill-header">
+        <h1>Tableline</h1>
+        <p>Restaurant Order Bill</p>
+      </header>
+      <div className="bill-meta">
+        <span>Order</span>
+        <strong>{order.id?.slice(-8).toUpperCase()}</strong>
+        <span>Customer</span>
+        <strong>{order.customerName}</strong>
+        <span>Phone</span>
+        <strong>{order.phone}</strong>
+        <span>Status</span>
+        <strong>{order.status}</strong>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {order.items.map((item) => (
+            <tr key={`${order.id}-${item.menuItemId || item.name}`}>
+              <td>{item.name}</td>
+              <td>{item.quantity}</td>
+              <td>{currency(item.price)}</td>
+              <td>{currency(item.price * item.quantity)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="bill-total">
+        <span>Grand total</span>
+        <strong>{currency(order.total)}</strong>
+      </div>
+      <p className="bill-footer">Thank you for your order.</p>
     </section>
   );
 }

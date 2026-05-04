@@ -381,6 +381,50 @@ h3 {
   display: flex;
 }
 
+.print-bill {
+  display: none;
+}
+
+.bill-header {
+  border-bottom: 2px solid #17201d;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+}
+
+.bill-meta {
+  display: grid;
+  gap: 8px 16px;
+  grid-template-columns: 110px 1fr;
+  margin-bottom: 18px;
+}
+
+.print-bill table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.print-bill th,
+.print-bill td {
+  border-bottom: 1px solid #d6d2ca;
+  padding: 10px 6px;
+  text-align: left;
+}
+
+.bill-total {
+  align-items: center;
+  border-top: 2px solid #17201d;
+  display: flex;
+  font-size: 1.15rem;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+}
+
+.bill-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+
 @media (max-width: 1100px) {
   .customer-grid,
   .admin-grid {
@@ -389,6 +433,32 @@ h3 {
 
   .orders-panel {
     max-height: none;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .app-shell > *:not(.print-bill) {
+    display: none !important;
+  }
+
+  .app-shell {
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-bill {
+    color: #17201d;
+    display: block;
+    font-size: 12pt;
+    padding: 24px;
+  }
+
+  .print-bill h1 {
+    font-size: 22pt;
   }
 }
 
