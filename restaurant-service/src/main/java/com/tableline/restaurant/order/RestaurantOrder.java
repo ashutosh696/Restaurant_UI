@@ -20,6 +20,8 @@ public class RestaurantOrder {
   @NotBlank
   private String phone;
 
+  private String customerEmail;
+
   @Valid
   @NotEmpty
   private List<OrderLine> items = new ArrayList<>();
@@ -51,6 +53,14 @@ public class RestaurantOrder {
 
   public void setPhone(String phone) {
     this.phone = phone;
+  }
+
+  public String getCustomerEmail() {
+    return customerEmail;
+  }
+
+  public void setCustomerEmail(String customerEmail) {
+    this.customerEmail = customerEmail;
   }
 
   public List<OrderLine> getItems() {

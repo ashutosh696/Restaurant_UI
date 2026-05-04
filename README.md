@@ -8,7 +8,8 @@ Two-app restaurant ordering system:
 ## Features
 
 - Customer menu browsing, cart management, order placement, and status tracking
-- Customer ordering is public
+- Customer browsing is public
+- Customer signup/sign-in is required before placing an order
 - Admin panel requires login
 - JWT authentication with `ADMIN` and `USER` roles
 - Admin menu item create/update/delete
@@ -105,7 +106,7 @@ ADMIN_PASSWORD=admin12345
 Change these in `restaurant-service\.env` before first startup for a real deployment.
 The React admin login form does not prefill these credentials.
 
-Normal users can browse and place orders without logging in. Admin users must log in to see the admin panel.
+Normal users can browse the menu without logging in, but must sign in before placing an order. Admin users must log in to see the admin panel.
 
 The backend also seeds three starter menu items when the `menu_items` collection is empty. Orders are stored in MongoDB in the `orders` collection after a customer places an order.
 
@@ -133,9 +134,11 @@ Open `http://localhost:5173`.
 Pages:
 
 - Customer ordering: `http://localhost:5173/customer`
+- Customer sign in: `http://localhost:5173/signin`
+- Customer sign up: `http://localhost:5173/signup`
 - Admin panel: `http://localhost:5173/admin`
 
-Vercel serves React as a single-page app. The frontend includes `restaurant-ui/vercel.json` so direct visits to `/customer` or `/admin` fall back to `index.html`.
+Vercel serves React as a single-page app. The frontend includes `restaurant-ui/vercel.json` so direct visits to `/customer`, `/signin`, `/signup`, or `/admin` fall back to `index.html`.
 
 ## API
 
@@ -152,10 +155,13 @@ Vercel serves React as a single-page app. The frontend includes `restaurant-ui/v
 Public endpoints:
 
 - `GET /api/menu/available`
-- `POST /api/orders`
 - `GET /api/orders/{id}`
 - `POST /api/auth/login`
 - `POST /api/auth/register`
+
+Authenticated customer endpoints:
+
+- `POST /api/orders`
 
 Admin-only endpoints:
 

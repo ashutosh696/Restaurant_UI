@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,10 +44,11 @@ public class RestaurantOrderController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  RestaurantOrder createOrder(@Valid @RequestBody CreateOrderRequest request) {
+  RestaurantOrder createOrder(@Valid @RequestBody CreateOrderRequest request, Authentication authentication) {
     RestaurantOrder order = new RestaurantOrder();
     order.setCustomerName(request.customerName());
     order.setPhone(request.phone());
+    order.setCustomerEmail(authentication.getName());
     order.setItems(enrichLines(request.items()));
     order.setTotal(order.getItems().stream().mapToDouble(line -> line.getPrice() * line.getQuantity()).sum());
     return orders.save(order);

@@ -369,9 +369,16 @@ h3 {
 }
 
 .status-actions,
-.row-actions {
+.row-actions,
+.account-actions,
+.auth-switch {
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.account-actions,
+.auth-switch {
+  display: flex;
 }
 
 @media (max-width: 1100px) {

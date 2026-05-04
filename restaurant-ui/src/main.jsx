@@ -83,9 +83,10 @@ function App() {
   const [phone, setPhone] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [editingItem, setEditingItem] = useState(emptyMenuItem());
-  const [auth, setAuth] = useState(() => readStoredAuth());
+  const [auth, setAuth] = useState(() => readStoredSession());
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [authMode, setAuthMode] = useState(() => (pageFromPath(window.location.pathname) === 'signup' ? 'signup' : 'signin'));
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -104,7 +105,10 @@ function App() {
 
   useEffect(() => {
     function handlePopState() {
-      setPage(pageFromPath(window.location.pathname));
+      const nextPage = pageFromPath(window.location.pathname);
+      if (nextPage === 'signin') setAuthMode('signin');
+      if (nextPage === 'signup') setAuthMode('signup');
+      setPage(nextPage);
     }
 
     window.addEventListener('popstate', handlePopState);
@@ -161,12 +165,18 @@ function App() {
   async function placeOrder(event) {
     event.preventDefault();
     if (!cart.length) return setError('Add at least one item before placing an order.');
+    if (!auth) {
+      setError('Please sign in or create an account before placing an order.');
+      navigateTo('/signin');
+      return;
+    }
     setLoading(true);
     setError('');
     setNotice('');
     try {
       const order = await request('/orders', {
         method: 'POST',
+        token: auth.token,
         body: JSON.stringify({
           customerName,
           phone,
@@ -240,23 +250,23 @@ function App() {
     }
   }
 
-  async function login(event) {
+  async function authenticate(event, mode = authMode) {
     event.preventDefault();
     setLoading(true);
     setError('');
     setNotice('');
     try {
-      const session = await request('/auth/login', {
+      const session = await request(mode === 'signup' ? '/auth/register' : '/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
-      if (session.role !== 'ADMIN') {
+      if (page === 'admin' && session.role !== 'ADMIN') {
         throw new Error('Only ADMIN users can access the restaurant panel.');
       }
       setAuth(session);
-      localStorage.setItem('restaurantAuth', JSON.stringify(session));
-      navigateTo('/admin');
-      setNotice(`Signed in as ${session.email}.`);
+      localStorage.setItem('restaurantSession', JSON.stringify(session));
+      navigateTo(page === 'admin' ? '/admin' : '/customer');
+      setNotice(`${mode === 'signup' ? 'Account created' : 'Signed in'} as ${session.email}.`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -265,7 +275,7 @@ function App() {
   }
 
   function logout() {
-    localStorage.removeItem('restaurantAuth');
+    localStorage.removeItem('restaurantSession');
     setAuth(null);
     navigateTo('/customer');
     setOrders([]);
@@ -276,6 +286,12 @@ function App() {
     window.history.pushState({}, '', path);
     if (pageFromPath(path) === 'admin') {
       setOrders([]);
+    }
+    if (pageFromPath(path) === 'signin') {
+      setAuthMode('signin');
+    }
+    if (pageFromPath(path) === 'signup') {
+      setAuthMode('signup');
     }
     setPage(pageFromPath(path));
   }
@@ -294,12 +310,22 @@ function App() {
           <button className={page === 'customer' ? 'active' : ''} onClick={() => navigateTo('/customer')}>
             <ShoppingCart size={18} /> Customer
           </button>
+          {!auth && page !== 'admin' && (
+            <>
+              <button className={page === 'signin' ? 'active' : ''} onClick={() => navigateTo('/signin')}>
+                <LogIn size={18} /> Sign in
+              </button>
+              <button className={page === 'signup' ? 'active' : ''} onClick={() => navigateTo('/signup')}>
+                <Plus size={18} /> Sign up
+              </button>
+            </>
+          )}
           {page === 'admin' && (
             <button className="active" onClick={() => navigateTo('/admin')}>
               <LayoutDashboard size={18} /> Admin
             </button>
           )}
-          {isAdmin && (
+          {auth && (
             <button onClick={logout}>
               <LogOut size={18} /> Logout
             </button>
@@ -316,8 +342,22 @@ function App() {
         </section>
       )}
 
-      {page === 'customer' ? (
+      {page === 'signin' || page === 'signup' ? (
+        <LoginView
+          title={authMode === 'signup' ? 'Create account' : 'Sign in'}
+          email={loginEmail}
+          password={loginPassword}
+          loading={loading}
+          mode={authMode}
+          setEmail={setLoginEmail}
+          setPassword={setLoginPassword}
+          setMode={setAuthMode}
+          navigateTo={navigateTo}
+          login={authenticate}
+        />
+      ) : page === 'customer' ? (
         <CustomerView
+          auth={auth}
           menu={menu}
           cart={cart}
           cartTotal={cartTotal}
@@ -330,18 +370,23 @@ function App() {
           setCustomerName={setCustomerName}
           setPhone={setPhone}
           setSelectedOrderId={setSelectedOrderId}
+          navigateTo={navigateTo}
           addToCart={addToCart}
           changeQuantity={changeQuantity}
           placeOrder={placeOrder}
         />
       ) : !isAdmin ? (
         <LoginView
+          title="Admin login"
           email={loginEmail}
           password={loginPassword}
           loading={loading}
+          mode="signin"
           setEmail={setLoginEmail}
           setPassword={setLoginPassword}
-          login={login}
+          setMode={setAuthMode}
+          navigateTo={navigateTo}
+          login={(event) => authenticate(event, 'signin')}
         />
       ) : (
         <AdminView
@@ -359,12 +404,17 @@ function App() {
   );
 }
 
-function LoginView({ email, password, loading, setEmail, setPassword, login }) {
+function LoginView({ title, email, password, loading, mode, setEmail, setPassword, setMode, navigateTo, login }) {
+  function switchMode(nextMode) {
+    setMode(nextMode);
+    navigateTo(nextMode === 'signup' ? '/signup' : '/signin');
+  }
+
   return (
     <section className="login-layout">
       <form className="panel login-panel" onSubmit={login} autoComplete="off">
         <div className="section-heading">
-          <h2>Admin login</h2>
+          <h2>{title}</h2>
           <LogIn size={20} />
         </div>
         <label>
@@ -376,8 +426,18 @@ function LoginView({ email, password, loading, setEmail, setPassword, login }) {
           <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
         </label>
         <button className="primary" disabled={loading}>
-          <LogIn size={18} /> Sign in
+          <LogIn size={18} /> {mode === 'signup' ? 'Create account' : 'Sign in'}
         </button>
+        {title !== 'Admin login' && (
+          <div className="auth-switch">
+            <button type="button" className={mode === 'signin' ? 'active-status' : ''} onClick={() => switchMode('signin')}>
+              Sign in
+            </button>
+            <button type="button" className={mode === 'signup' ? 'active-status' : ''} onClick={() => switchMode('signup')}>
+              Sign up
+            </button>
+          </div>
+        )}
       </form>
     </section>
   );
@@ -386,6 +446,7 @@ function LoginView({ email, password, loading, setEmail, setPassword, login }) {
 function CustomerView(props) {
   const {
     menu,
+    auth,
     cart,
     cartTotal,
     customerName,
@@ -397,6 +458,7 @@ function CustomerView(props) {
     setCustomerName,
     setPhone,
     setSelectedOrderId,
+    navigateTo,
     addToCart,
     changeQuantity,
     placeOrder,
@@ -427,6 +489,24 @@ function CustomerView(props) {
       </div>
 
       <aside className="side-stack">
+        <section className="panel">
+          <div className="section-heading">
+            <h2>Account</h2>
+            <LogIn size={20} />
+          </div>
+          {auth ? (
+            <p className="muted">Signed in as {auth.email}</p>
+          ) : (
+            <div className="account-actions">
+              <button type="button" onClick={() => navigateTo('/signin')}>
+                <LogIn size={18} /> Sign in
+              </button>
+              <button type="button" className="primary" onClick={() => navigateTo('/signup')}>
+                <Plus size={18} /> Sign up
+              </button>
+            </div>
+          )}
+        </section>
         <form className="panel" onSubmit={placeOrder}>
           <div className="section-heading">
             <h2>Cart</h2>
@@ -460,7 +540,7 @@ function CustomerView(props) {
             <span>Total</span>
             <strong>{currency(cartTotal)}</strong>
           </div>
-          <button className="primary" disabled={loading || !cart.length}>
+          <button className="primary" disabled={loading || !cart.length || !auth}>
             <CreditCard size={18} /> Place order
           </button>
         </form>
@@ -598,12 +678,16 @@ function emptyMenuItem() {
 }
 
 function pageFromPath(pathname) {
-  return pathname.toLowerCase().startsWith('/admin') ? 'admin' : 'customer';
+  const path = pathname.toLowerCase();
+  if (path.startsWith('/admin')) return 'admin';
+  if (path.startsWith('/signin')) return 'signin';
+  if (path.startsWith('/signup')) return 'signup';
+  return 'customer';
 }
 
-function readStoredAuth() {
+function readStoredSession() {
   try {
-    const stored = localStorage.getItem('restaurantAuth');
+    const stored = localStorage.getItem('restaurantSession');
     return stored ? JSON.parse(stored) : null;
   } catch {
     return null;
